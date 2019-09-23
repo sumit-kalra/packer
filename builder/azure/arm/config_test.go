@@ -270,6 +270,87 @@ func TestConfigVirtualNetworkSubnetNameMustBeSetWithVirtualNetworkName(t *testin
 	}
 }
 
+func TestConfigAllowedInboundIpAddressesIsOptional(t *testing.T) {
+	config := map[string]string{
+		"capture_name_prefix":    "ignore",
+		"capture_container_name": "ignore",
+		"location":               "ignore",
+		"image_url":              "ignore",
+		"storage_account":        "ignore",
+		"resource_group_name":    "ignore",
+		"subscription_id":        "ignore",
+		"os_type":                constants.Target_Linux,
+		"communicator":           "none",
+		"virtual_network_name":   "MyVirtualNetwork",
+	}
+
+	c, _, err := newConfig(config, getPackerConfiguration())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.AllowedInboundIpAddresses != nil {
+		t.Errorf("Expected Config to set allowed_inbound_ip_addresses to nil, but got %v", c.AllowedInboundIpAddresses)
+	}
+}
+
+func TestConfigShouldAcceptCorrectInboundIpAddresses(t *testing.T) {
+	ipValue0 := "127.0.0.1"
+	ipValue1 := "127.0.0.2"
+	config := map[string]interface{}{
+		"capture_name_prefix":    "ignore",
+		"capture_container_name": "ignore",
+		"location":               "ignore",
+		"image_url":              "ignore",
+		"storage_account":        "ignore",
+		"resource_group_name":    "ignore",
+		"subscription_id":        "ignore",
+		"os_type":                constants.Target_Linux,
+		"communicator":           "none",
+		"virtual_network_name":   "MyVirtualNetwork",
+	}
+
+	config["allowed_inbound_ip_addresses"] = ipValue0
+	c, _, err := newConfig(config, getPackerConfiguration())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.AllowedInboundIpAddresses == nil || len(c.AllowedInboundIpAddresses) != 1 ||
+		c.AllowedInboundIpAddresses[0] != ipValue0 {
+		t.Errorf("Expected 'allowed_inbound_ip_addresses' to have one element (%s), but got '%v'.", ipValue0, c.AllowedInboundIpAddresses)
+	}
+
+	config["allowed_inbound_ip_addresses"] = []string{ipValue0, ipValue1}
+	c, _, err = newConfig(config, getPackerConfiguration())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.AllowedInboundIpAddresses == nil || len(c.AllowedInboundIpAddresses) != 2 ||
+		c.AllowedInboundIpAddresses[0] != ipValue0 || c.AllowedInboundIpAddresses[1] != ipValue1 {
+		t.Errorf("Expected 'allowed_inbound_ip_addresses' to have one element (%s %s), but got '%v'.", ipValue0, ipValue1, c.AllowedInboundIpAddresses)
+	}
+}
+
+func TestConfigShouldRejectIncorrectInboundIpAddresses(t *testing.T) {
+	config := map[string]interface{}{
+		"capture_name_prefix":          "ignore",
+		"capture_container_name":       "ignore",
+		"location":                     "ignore",
+		"image_url":                    "ignore",
+		"storage_account":              "ignore",
+		"resource_group_name":          "ignore",
+		"subscription_id":              "ignore",
+		"os_type":                      constants.Target_Linux,
+		"communicator":                 "none",
+		"virtual_network_name":         "MyVirtualNetwork",
+		"allowed_inbound_ip_addresses": []string{"127.0.0.1", "127.0.0.two"},
+	}
+
+	c, _, err := newConfig(config, getPackerConfiguration())
+	if err == nil {
+		t.Errorf("Expected configuration creation to fail, but it succeeded with the malformed allowed_inbound_ip_addresses set to %v", c.AllowedInboundIpAddresses)
+	}
+}
+
 func TestConfigShouldDefaultToPublicCloud(t *testing.T) {
 	c, _, _ := newConfig(getArmBuilderConfiguration(), getPackerConfiguration())
 
