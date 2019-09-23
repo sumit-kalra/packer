@@ -336,10 +336,10 @@ Providing `temp_resource_group_name` or `location` in combination with
     containing the virtual network. If the resource group cannot be found, or
     it cannot be disambiguated, this value should be set.
 
--   `allowed_inbound_ip_addresses` (array of strings) list of IP addresses that
-    should be allowed access to the VM. If provided, an Azure Network Security 
-    Group will be created with corresponding rules and be bound to the NIC 
-    attached to the VM. 
+-   `allowed_inbound_ip_addresses` (array of strings) list of IP addresses and
+    CIDR blocks that should be allowed access to the VM. If provided, an Azure
+    Network Security Group will be created with corresponding rules and be bound 
+    to the NIC attached to the VM. 
 
 -   `virtual_network_subnet_name` (string) If virtual\_network\_name is set,
     this value **may** also be set. If virtual\_network\_name is set, and this

@@ -755,7 +755,9 @@ func assertManagedImageDataDiskSnapshotName(name, setting string) (bool, error) 
 func assertAllowedInboundIpAddresses(ipAddresses []string, setting string) (bool, error) {
 	for _, ipAddress := range ipAddresses {
 		if net.ParseIP(ipAddress) == nil {
-			return false, fmt.Errorf("The setting %s must only contain valid IP addresses", setting)
+			if _, _, err := net.ParseCIDR(ipAddress); err != nil {
+				return false, fmt.Errorf("The setting %s must only contain valid IP addresses or CIDR blocks", setting)
+			}
 		}
 	}
 	return true, nil

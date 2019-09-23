@@ -296,6 +296,8 @@ func TestConfigAllowedInboundIpAddressesIsOptional(t *testing.T) {
 func TestConfigShouldAcceptCorrectInboundIpAddresses(t *testing.T) {
 	ipValue0 := "127.0.0.1"
 	ipValue1 := "127.0.0.2"
+	cidrValue2 := "192.168.100.0/24"
+	cidrValue3 := "10.10.1.16/32"
 	config := map[string]interface{}{
 		"capture_name_prefix":    "ignore",
 		"capture_container_name": "ignore",
@@ -319,34 +321,53 @@ func TestConfigShouldAcceptCorrectInboundIpAddresses(t *testing.T) {
 		t.Errorf("Expected 'allowed_inbound_ip_addresses' to have one element (%s), but got '%v'.", ipValue0, c.AllowedInboundIpAddresses)
 	}
 
-	config["allowed_inbound_ip_addresses"] = []string{ipValue0, ipValue1}
+	config["allowed_inbound_ip_addresses"] = cidrValue2
 	c, _, err = newConfig(config, getPackerConfiguration())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if c.AllowedInboundIpAddresses == nil || len(c.AllowedInboundIpAddresses) != 2 ||
-		c.AllowedInboundIpAddresses[0] != ipValue0 || c.AllowedInboundIpAddresses[1] != ipValue1 {
-		t.Errorf("Expected 'allowed_inbound_ip_addresses' to have one element (%s %s), but got '%v'.", ipValue0, ipValue1, c.AllowedInboundIpAddresses)
+	if c.AllowedInboundIpAddresses == nil || len(c.AllowedInboundIpAddresses) != 1 ||
+		c.AllowedInboundIpAddresses[0] != cidrValue2 {
+		t.Errorf("Expected 'allowed_inbound_ip_addresses' to have one element (%s), but got '%v'.", cidrValue2, c.AllowedInboundIpAddresses)
+	}
+
+	config["allowed_inbound_ip_addresses"] = []string{ipValue0, cidrValue2, ipValue1, cidrValue3}
+	c, _, err = newConfig(config, getPackerConfiguration())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if c.AllowedInboundIpAddresses == nil || len(c.AllowedInboundIpAddresses) != 4 ||
+		c.AllowedInboundIpAddresses[0] != ipValue0 || c.AllowedInboundIpAddresses[1] != cidrValue2 ||
+		c.AllowedInboundIpAddresses[2] != ipValue1 || c.AllowedInboundIpAddresses[3] != cidrValue3 {
+		t.Errorf("Expected 'allowed_inbound_ip_addresses' to have four elements (%s %s %s %s), but got '%v'.", ipValue0, cidrValue2, ipValue1,
+			cidrValue3, c.AllowedInboundIpAddresses)
 	}
 }
 
 func TestConfigShouldRejectIncorrectInboundIpAddresses(t *testing.T) {
 	config := map[string]interface{}{
-		"capture_name_prefix":          "ignore",
-		"capture_container_name":       "ignore",
-		"location":                     "ignore",
-		"image_url":                    "ignore",
-		"storage_account":              "ignore",
-		"resource_group_name":          "ignore",
-		"subscription_id":              "ignore",
-		"os_type":                      constants.Target_Linux,
-		"communicator":                 "none",
-		"virtual_network_name":         "MyVirtualNetwork",
-		"allowed_inbound_ip_addresses": []string{"127.0.0.1", "127.0.0.two"},
+		"capture_name_prefix":    "ignore",
+		"capture_container_name": "ignore",
+		"location":               "ignore",
+		"image_url":              "ignore",
+		"storage_account":        "ignore",
+		"resource_group_name":    "ignore",
+		"subscription_id":        "ignore",
+		"os_type":                constants.Target_Linux,
+		"communicator":           "none",
+		"virtual_network_name":   "MyVirtualNetwork",
 	}
 
+	config["allowed_inbound_ip_addresses"] = []string{"127.0.0.1", "127.0.0.two"}
 	c, _, err := newConfig(config, getPackerConfiguration())
 	if err == nil {
+		t.Errorf("Expected configuration creation to fail, but it succeeded with the malformed allowed_inbound_ip_addresses set to %v", c.AllowedInboundIpAddresses)
+	}
+
+	config["allowed_inbound_ip_addresses"] = []string{"192.168.100.1000/24", "10.10.1.16/32"}
+	c, _, err = newConfig(config, getPackerConfiguration())
+	if err == nil {
+		// 192.168.100.1000/24 is invalid
 		t.Errorf("Expected configuration creation to fail, but it succeeded with the malformed allowed_inbound_ip_addresses set to %v", c.AllowedInboundIpAddresses)
 	}
 }
