@@ -50,12 +50,6 @@
         },
         "publicIPAllocationMethod": "[variables('publicIPAddressType')]"
       },
-      "tags": {
-        "PlanInfo": "planName00",
-        "PlanProduct": "planProduct00",
-        "PlanPromotionCode": "",
-        "PlanPublisher": "planPublisher00"
-      },
       "type": "Microsoft.Network/publicIPAddresses"
     },
     {
@@ -72,16 +66,13 @@
           {
             "name": "[variables('subnetName')]",
             "properties": {
-              "addressPrefix": "[variables('subnetAddressPrefix')]"
+              "addressPrefix": "[variables('subnetAddressPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
+              }
             }
           }
         ]
-      },
-      "tags": {
-        "PlanInfo": "planName00",
-        "PlanProduct": "planProduct00",
-        "PlanPromotionCode": "",
-        "PlanPublisher": "planPublisher00"
       },
       "type": "Microsoft.Network/virtualNetworks"
     },
@@ -109,12 +100,6 @@
           }
         ]
       },
-      "tags": {
-        "PlanInfo": "planName00",
-        "PlanProduct": "planProduct00",
-        "PlanPromotionCode": "",
-        "PlanPublisher": "planPublisher00"
-      },
       "type": "Microsoft.Network/networkInterfaces"
     },
     {
@@ -124,11 +109,6 @@
       ],
       "location": "[variables('location')]",
       "name": "[parameters('vmName')]",
-      "plan": {
-        "name": "planName00",
-        "product": "planProduct00",
-        "publisher": "planPublisher00"
-      },
       "properties": {
         "diagnosticsProfile": {
           "bootDiagnostics": {
@@ -161,29 +141,66 @@
           }
         },
         "storageProfile": {
+          "dataDisks": [
+            {
+              "caching": "ReadWrite",
+              "createOption": "Empty",
+              "diskSizeGB": 32,
+              "lun": 0,
+              "managedDisk": {
+                "storageAccountType": "Standard_LRS"
+              },
+              "name": "datadisk-1"
+            }
+          ],
           "imageReference": {
-            "offer": "ignored00",
-            "publisher": "ignored00",
-            "sku": "ignored00",
-            "version": "latest"
+            "offer": "--image-offer--",
+            "publisher": "--image-publisher--",
+            "sku": "--image-sku--",
+            "version": "--version--"
           },
           "osDisk": {
             "caching": "ReadWrite",
             "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "Standard_LRS"
+            },
             "name": "[parameters('osDiskName')]",
-            "vhd": {
-              "uri": "[concat(parameters('storageAccountBlobEndpoint'),variables('vmStorageAccountContainerName'),'/', parameters('osDiskName'),'.vhd')]"
-            }
+            "osType": "Linux"
           }
         }
       },
-      "tags": {
-        "PlanInfo": "planName00",
-        "PlanProduct": "planProduct00",
-        "PlanPromotionCode": "",
-        "PlanPublisher": "planPublisher00"
-      },
       "type": "Microsoft.Compute/virtualMachines"
+    },
+    {
+      "apiVersion": "[variables('networkSecurityGroupsApiVersion')]",
+      "location": "[variables('location')]",
+      "name": "[parameters('nsgName')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "",
+            "properties": {
+              "access": "Allow",
+              "description": "Allow inbound traffic from specified IP addresses",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "destinationPortRanges": [
+                "22",
+                "5986"
+              ],
+              "direction": "Inbound",
+              "priority": 100,
+              "protocol": "Tcp",
+              "sourceAddressPrefixes": [
+                "127.0.0.1",
+                "192.168.100.0/24"
+              ],
+              "sourcePortRange": "*"
+            }
+          }
+        ]
+      },
+      "type": "Microsoft.Network/networkSecurityGroups"
     }
   ],
   "variables": {

@@ -363,6 +363,7 @@ type Config struct {
 	tmpOSDiskName          string
 	tmpSubnetName          string
 	tmpVirtualNetworkName  string
+	tmpNsgName             string
 	tmpWinRMCertificateUrl string
 
 	// Authentication with the VM via SSH
@@ -610,6 +611,7 @@ func setRuntimeValues(c *Config) {
 	c.tmpOSDiskName = tempName.OSDiskName
 	c.tmpSubnetName = tempName.SubnetName
 	c.tmpVirtualNetworkName = tempName.VirtualNetworkName
+	c.tmpNsgName = tempName.NsgName
 	c.tmpKeyVaultName = tempName.KeyVaultName
 }
 
