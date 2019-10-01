@@ -53,27 +53,6 @@
       "type": "Microsoft.Network/publicIPAddresses"
     },
     {
-      "apiVersion": "[variables('virtualNetworksApiVersion')]",
-      "location": "[variables('location')]",
-      "name": "[variables('virtualNetworkName')]",
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[variables('addressPrefix')]"
-          ]
-        },
-        "subnets": [
-          {
-            "name": "[variables('subnetName')]",
-            "properties": {
-              "addressPrefix": "[variables('subnetAddressPrefix')]"
-            }
-          }
-        ]
-      },
-      "type": "Microsoft.Network/virtualNetworks"
-    },
-    {
       "apiVersion": "[variables('networkInterfacesApiVersion')]",
       "dependsOn": [
         "[concat('Microsoft.Network/publicIPAddresses/', parameters('publicIPAddressName'))]",
@@ -139,22 +118,98 @@
         },
         "storageProfile": {
           "imageReference": {
-            "id": "/subscriptions/ignore/resourceGroups/ignore/providers/Microsoft.Compute/galleries/ignore/images/ignore"
+            "offer": "UbuntuServer",
+            "publisher": "Canonical",
+            "sku": "16.04",
+            "version": "latest"
           },
           "osDisk": {
-            "caching": "ReadOnly",
+            "caching": "ReadWrite",
             "createOption": "FromImage",
             "name": "[parameters('osDiskName')]",
-            "osType": "Linux"
+            "vhd": {
+              "uri": "[concat(parameters('storageAccountBlobEndpoint'),variables('vmStorageAccountContainerName'),'/', parameters('osDiskName'),'.vhd')]"
+            }
           }
         }
       },
       "type": "Microsoft.Compute/virtualMachines"
+    },
+    {
+      "apiVersion": "[variables('networkSecurityGroupsApiVersion')]",
+      "location": "[variables('location')]",
+      "name": "[parameters('nsgName')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "AllowIPsToSshWinRMInbound",
+            "properties": {
+              "access": "Allow",
+              "description": "Allow inbound traffic from specified IP addresses",
+              "destinationAddressPrefix": "VirtualNetwork",
+              "destinationPortRanges": [
+                "22",
+                "5986"
+              ],
+              "direction": "Inbound",
+              "priority": 100,
+              "protocol": "Tcp",
+              "sourceAddressPrefixes": [
+                "127.0.0.1",
+                "192.168.100.0/24"
+              ],
+              "sourcePortRange": "*"
+            }
+          },
+          {
+            "name": "DenyAllInbound",
+            "properties": {
+              "access": "Deny",
+              "description": "Deny all inbound traffic",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "*",
+              "direction": "Inbound",
+              "priority": 101,
+              "protocol": "Tcp",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*"
+            }
+          }
+        ]
+      },
+      "type": "Microsoft.Network/networkSecurityGroups"
+    },
+    {
+      "apiVersion": "[variables('virtualNetworksApiVersion')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/networkSecurityGroups/', parameters('nsgName'))]"
+      ],
+      "location": "[variables('location')]",
+      "name": "[variables('virtualNetworkName')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('addressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetAddressPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('nsgName'))]"
+              }
+            }
+          }
+        ]
+      },
+      "type": "Microsoft.Network/virtualNetworks"
     }
   ],
   "variables": {
     "addressPrefix": "10.0.0.0/16",
-    "apiVersion": "2018-04-01",
+    "apiVersion": "2017-03-30",
     "location": "[resourceGroup().location]",
     "managedDiskApiVersion": "2017-03-30",
     "networkInterfacesApiVersion": "2017-04-01",

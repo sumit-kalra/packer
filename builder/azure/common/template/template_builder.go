@@ -321,6 +321,8 @@ func (s *TemplateBuilder) SetNetworkSecurityGroup(ipAddresses []string) error {
 	if err != nil {
 		return err
 	}
+	s.deleteResourceByType(resourceVirtualNetworks)
+
 	s.addResourceDependency(vnetResource, dependency)
 
 	if vnetResource.Properties == nil || vnetResource.Properties.Subnets == nil || len(*vnetResource.Properties.Subnets) != 1 {
@@ -336,6 +338,8 @@ func (s *TemplateBuilder) SetNetworkSecurityGroup(ipAddresses []string) error {
 	subnet.SubnetPropertiesFormat.NetworkSecurityGroup = &network.SecurityGroup{
 		ID: to.StringPtr(resourceId),
 	}
+
+	s.addResource(vnetResource)
 
 	return nil
 }
@@ -452,7 +456,7 @@ func (s *TemplateBuilder) createNsgResource(srcIpAddresses []string) (*Resource,
 		Properties: &Properties{
 			SecurityRules: &[]network.SecurityRule{
 				{
-					Name: to.StringPtr(""),
+					Name: to.StringPtr("AllowIPsToSshWinRMInbound"),
 					SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
 						Description:              to.StringPtr("Allow inbound traffic from specified IP addresses"),
 						Protocol:                 network.SecurityRuleProtocolTCP,
@@ -463,9 +467,27 @@ func (s *TemplateBuilder) createNsgResource(srcIpAddresses []string) (*Resource,
 						SourcePortRange:          to.StringPtr("*"),
 						DestinationAddressPrefix: to.StringPtr("VirtualNetwork"),
 						DestinationPortRanges: &[]string{
-							"22",
-							"5986",
+							"22",   // ssh
+							"5986", // WinRM
 						},
+					},
+				},
+				{
+					Name: to.StringPtr("DenyAllInbound"),
+					SecurityRulePropertiesFormat: &network.SecurityRulePropertiesFormat{
+						Description:                to.StringPtr("Deny all inbound traffic"),
+						Protocol:                   network.SecurityRuleProtocolTCP,
+						Priority:                   to.Int32Ptr(101),
+						Access:                     network.SecurityRuleAccessDeny,
+						Direction:                  network.SecurityRuleDirectionInbound,
+						SourcePortRange:            to.StringPtr("*"),
+						DestinationPortRange:       to.StringPtr("*"),
+						SourceAddressPrefix:        to.StringPtr("*"),
+						SourceAddressPrefixes:      nil,
+						SourcePortRanges:           nil,
+						DestinationAddressPrefix:   to.StringPtr("*"),
+						DestinationAddressPrefixes: nil,
+						DestinationPortRanges:      nil,
 					},
 				},
 			},
