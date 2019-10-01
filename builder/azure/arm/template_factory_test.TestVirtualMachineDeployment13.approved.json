@@ -173,20 +173,6 @@
               ],
               "sourcePortRange": "*"
             }
-          },
-          {
-            "name": "DenyAllInbound",
-            "properties": {
-              "access": "Deny",
-              "description": "Deny all inbound traffic",
-              "destinationAddressPrefix": "*",
-              "destinationPortRange": "*",
-              "direction": "Inbound",
-              "priority": 101,
-              "protocol": "Tcp",
-              "sourceAddressPrefix": "*",
-              "sourcePortRange": "*"
-            }
           }
         ]
       },
