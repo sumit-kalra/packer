@@ -347,6 +347,8 @@ type Config struct {
 	// allowed access to the VM. If provided, an Azure Network Security
 	// Group will be created with corresponding rules and be bound to
 	// the NIC attached to the VM.
+	// Providing `allowed_inbound_ip_addresses` in combination with
+	// `virtual_network_name` is not allowed.
 	AllowedInboundIpAddresses []string `mapstructure:"allowed_inbound_ip_addresses"`
 
 	// Runtime Values
