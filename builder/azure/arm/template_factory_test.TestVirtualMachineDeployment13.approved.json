@@ -105,30 +105,32 @@
           "adminPassword": "[parameters('adminPassword')]",
           "adminUsername": "[parameters('adminUsername')]",
           "computerName": "[parameters('vmName')]",
-          "linuxConfiguration": {
-            "ssh": {
-              "publicKeys": [
+          "secrets": [
+            {
+              "sourceVault": {
+                "id": "[resourceId(resourceGroup().name, 'Microsoft.KeyVault/vaults', '--keyvault-name--')]"
+              },
+              "vaultCertificates": [
                 {
-                  "keyData": "",
-                  "path": "[variables('sshKeyPath')]"
+                  "certificateStore": "My",
+                  "certificateUrl": ""
+                }
+              ]
+            }
+          ],
+          "windowsConfiguration": {
+            "provisionVMAgent": true,
+            "winRM": {
+              "listeners": [
+                {
+                  "certificateUrl": "",
+                  "protocol": "https"
                 }
               ]
             }
           }
         },
         "storageProfile": {
-          "dataDisks": [
-            {
-              "caching": "ReadWrite",
-              "createOption": "Empty",
-              "diskSizeGB": 32,
-              "lun": 0,
-              "managedDisk": {
-                "storageAccountType": "Standard_LRS"
-              },
-              "name": "datadisk-1"
-            }
-          ],
           "imageReference": {
             "offer": "--image-offer--",
             "publisher": "--image-publisher--",
@@ -142,7 +144,7 @@
               "storageAccountType": "Standard_LRS"
             },
             "name": "[parameters('osDiskName')]",
-            "osType": "Linux"
+            "osType": "Windows"
           }
         }
       },
@@ -160,10 +162,7 @@
               "access": "Allow",
               "description": "Allow inbound traffic from specified IP addresses",
               "destinationAddressPrefix": "VirtualNetwork",
-              "destinationPortRanges": [
-                "22",
-                "5986"
-              ],
+              "destinationPortRange": "5985",
               "direction": "Inbound",
               "priority": 100,
               "protocol": "Tcp",

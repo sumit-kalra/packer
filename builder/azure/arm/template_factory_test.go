@@ -428,17 +428,15 @@ func TestVirtualMachineDeployment12(t *testing.T) {
 // Ensure the VM template is correct when building with list of allowed IP addresses
 func TestVirtualMachineDeployment13(t *testing.T) {
 	config := map[string]interface{}{
-		"location":        "ignore",
-		"subscription_id": "ignore",
-		"os_type":         constants.Target_Linux,
-		"communicator":    "none",
-		"image_publisher": "--image-publisher--",
-		"image_offer":     "--image-offer--",
-		"image_sku":       "--image-sku--",
-		"image_version":   "--version--",
-
-		"disk_additional_size": []uint{32},
-
+		"location":                          "ignore",
+		"subscription_id":                   "ignore",
+		"os_type":                           constants.Target_Windows,
+		"communicator":                      "winrm",
+		"winrm_username":                    "ignore",
+		"image_publisher":                   "--image-publisher--",
+		"image_offer":                       "--image-offer--",
+		"image_sku":                         "--image-sku--",
+		"image_version":                     "--version--",
 		"managed_image_name":                "ManagedImageName",
 		"managed_image_resource_group_name": "ManagedImageResourceGroupName",
 		"allowed_inbound_ip_addresses":      []string{"127.0.0.1", "192.168.100.0/24"},
@@ -448,6 +446,7 @@ func TestVirtualMachineDeployment13(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	c.tmpKeyVaultName = "--keyvault-name--"
 
 	deployment, err := GetVirtualMachineDeployment(c)
 	if err != nil {

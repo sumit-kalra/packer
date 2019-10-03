@@ -147,10 +147,7 @@
               "access": "Allow",
               "description": "Allow inbound traffic from specified IP addresses",
               "destinationAddressPrefix": "VirtualNetwork",
-              "destinationPortRanges": [
-                "22",
-                "5986"
-              ],
+              "destinationPortRange": "123",
               "direction": "Inbound",
               "priority": 100,
               "protocol": "Tcp",

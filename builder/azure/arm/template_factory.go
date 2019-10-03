@@ -118,8 +118,11 @@ func GetVirtualMachineDeployment(config *Config) (*resources.Deployment, error) 
 			config.VirtualNetworkSubnetName)
 	}
 
-	if config.AllowedInboundIpAddresses != nil && len(config.AllowedInboundIpAddresses) >= 1 {
-		builder.SetNetworkSecurityGroup(config.AllowedInboundIpAddresses)
+	if config.AllowedInboundIpAddresses != nil && len(config.AllowedInboundIpAddresses) >= 1 && config.Comm.Port() != 0 {
+		err = builder.SetNetworkSecurityGroup(config.AllowedInboundIpAddresses, config.Comm.Port())
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	builder.SetTags(&config.AzureTags)

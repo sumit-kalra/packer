@@ -3,6 +3,7 @@ package template
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-04-01/compute"
@@ -311,8 +312,8 @@ func (s *TemplateBuilder) SetPrivateVirtualNetworkWithPublicIp(virtualNetworkRes
 	return nil
 }
 
-func (s *TemplateBuilder) SetNetworkSecurityGroup(ipAddresses []string) error {
-	nsgResource, dependency, resourceId := s.createNsgResource(ipAddresses)
+func (s *TemplateBuilder) SetNetworkSecurityGroup(ipAddresses []string, port int) error {
+	nsgResource, dependency, resourceId := s.createNsgResource(ipAddresses, port)
 	if err := s.addResource(nsgResource); err != nil {
 		return err
 	}
@@ -447,7 +448,7 @@ func (s *TemplateBuilder) deleteResourceDependency(resource *Resource, predicate
 	*resource.DependsOn = deps
 }
 
-func (s *TemplateBuilder) createNsgResource(srcIpAddresses []string) (*Resource, string, string) {
+func (s *TemplateBuilder) createNsgResource(srcIpAddresses []string, port int) (*Resource, string, string) {
 	resource := &Resource{
 		ApiVersion: to.StringPtr("[variables('networkSecurityGroupsApiVersion')]"),
 		Name:       to.StringPtr("[parameters('nsgName')]"),
@@ -466,10 +467,7 @@ func (s *TemplateBuilder) createNsgResource(srcIpAddresses []string) (*Resource,
 						SourceAddressPrefixes:    &srcIpAddresses,
 						SourcePortRange:          to.StringPtr("*"),
 						DestinationAddressPrefix: to.StringPtr("VirtualNetwork"),
-						DestinationPortRanges: &[]string{
-							"22",   // ssh
-							"5986", // WinRM
-						},
+						DestinationPortRange:     to.StringPtr(strconv.Itoa(port)),
 					},
 				},
 			},
